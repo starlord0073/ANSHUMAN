@@ -1,11 +1,14 @@
 name: Molecule Test
 
 on:
- workflow_dispatch:
+  workflow_dispatch:
+  pull_request:
+    branches:
+      - main
   push:
     branches:
-      - Jchinmay654
-      - '*'
+      - main
+
 jobs:
   molecule_test:
     runs-on: ubuntu-latest
@@ -24,10 +27,12 @@ jobs:
           sudo systemctl start docker
           ansible-galaxy collection install community.docker
           ansible-galaxy collection install ansible.posix
-      - name: Molecule Test
+
+      - name: molecule Test
         run: |
-          cd terraform-install
+          cd ${{ github.workspace }}/${{ github.event.pull_request.head.repo.name }}
           molecule test
         env:
           PY_COLORS: '1'
           ANSIBLE_FORCE_COLOR: '1'
+
