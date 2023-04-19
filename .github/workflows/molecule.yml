@@ -36,12 +36,3 @@ jobs:
         env:
           PY_COLORS: '1'
           ANSIBLE_FORCE_COLOR: '1'
-
-      - name: Molecule Test on Arbitrary Directory
-        if: github.event_name == 'push'
-        run: |
-          cd ${{ inputs.directory-path }}
-          molecule test
-        env:
-          PY_COLORS: '1'
-          ANSIBLE_FORCE_COLOR: '1'
