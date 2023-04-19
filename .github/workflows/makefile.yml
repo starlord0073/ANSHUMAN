@@ -27,9 +27,12 @@ jobs:
           sudo systemctl start docker
           ansible-galaxy collection install community.docker
           ansible-galaxy collection install ansible.posix
+      
       - name: Run Molecule Test
         if: github.event_name == 'pull_request'
         run: |
+          echo "Github Workspace: ${github.workspace}"
+          echo "Github Event Pull Request Head Repo Name: ${github.event.pull_request.head.repo.name}"
           cd ${{ github.workspace }}/${{ github.event.pull_request.head.repo.name }}
           for dir in ${{ inputs.directory-path }}/* ; do
             if [ -d "${dir}" ]; then
