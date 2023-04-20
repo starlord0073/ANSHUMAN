@@ -1,0 +1,32 @@
+name: Molecule Test
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  molecule_test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v2
+
+      - name: Install Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y python3-pip
+          pip3 install molecule[docker] ansible
+          sudo systemctl start docker
+          ansible-galaxy collection install community.docker
+          ansible-galaxy collection install ansible.posix
+      
+      - name: Run Molecule Tests
+        run: |
+          for dir in $(find . -type f -name molecule.yml -printf '%h\n' | sort -u); do
+            cd "${dir}" && molecule test
+          done
+        env:
+          PY_COLORS: '1'
+          ANSIBLE_FORCE_COLOR: '1'
+        if: github.event_name == 'pull_request'
