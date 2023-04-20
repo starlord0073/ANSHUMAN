@@ -1,7 +1,6 @@
 name: Molecule Test
 
 on:
-  workflow_dispatch:
   pull_request:
     branches: [ main ]
   push:
@@ -13,6 +12,10 @@ jobs:
     strategy:
       matrix:
         platform: ['centos7', 'debian10']
+    inputs:
+      directory-path:
+        description: 'Directory path to run Molecule tests'
+        required: true
     steps:
       - name: Checkout Code
         uses: actions/checkout@v2
@@ -38,7 +41,3 @@ jobs:
           PY_COLORS: '1'
           ANSIBLE_FORCE_COLOR: '1'
         working-directory: ${{ github.event.pull_request.head.repo.name }}
-        inputs:
-          directory-path:
-            description: 'Directory path to run Molecule tests'
-            required: true
