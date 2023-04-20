@@ -1,22 +1,13 @@
 name: Molecule Test
 
 on:
-  workflow_dispatch:
   pull_request:
-    branches: [ main ]
-  push:
-    branches: [ main ]
+    branches:
+      - main
 
 jobs:
   molecule_test:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        platform: ['centos7', 'debian10']
-    inputs:
-      directory-path:
-        description: 'Directory path to run Molecule tests'
-        required: true
     steps:
       - name: Checkout Code
         uses: actions/checkout@v2
@@ -30,15 +21,22 @@ jobs:
           ansible-galaxy collection install community.docker
           ansible-galaxy collection install ansible.posix
       
-      - name: Run Molecule Test
-        if: github.event_name == 'pull_request'
+      - name: Get Repository Directories
+        id: repo-dirs
+        uses: gr2m/get-repository-directories@v1.x
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          top_level_only: false
+      
+      - name: Run Molecule Tests
         run: |
-          echo "Github Workspace: ${github.workspace}"
-          echo "Github Event Pull Request Head Repo Name: ${github.event.pull_request.head.repo.name}"
-          for dir in $(find ${{ github.workspace }} -type d -name "${{ inputs.directory-path }}"); do
-            cd $dir && molecule test
+          for dir in ${{ steps.repo-dirs.outputs.relative_paths }}; do
+            if [ -d "${dir}/meta" ]; then
+              role_dir="$(dirname "${dir}")"
+              cd "${role_dir}" && molecule test
+            fi
           done
         env:
           PY_COLORS: '1'
           ANSIBLE_FORCE_COLOR: '1'
-        working-directory: ${{ github.event.pull_request.head.repo.name }}
+        if: github.event_name == 'pull_request'
