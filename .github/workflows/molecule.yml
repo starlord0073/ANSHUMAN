@@ -1,13 +1,10 @@
 name: Molecule Test
 
 on:
-  workflow_dispatch:
   pull_request:
-    branches:
-      - main
+    branches: [ main ]
   push:
-    branches:
-      - main
+    branches: [ main ]
 
 jobs:
   molecule_test:
@@ -27,11 +24,20 @@ jobs:
           sudo systemctl start docker
           ansible-galaxy collection install community.docker
           ansible-galaxy collection install ansible.posix
-
-      - name: molecule Test
+      
+      - name: Run Molecule Test
+        if: github.event_name == 'pull_request'
         run: |
-          cd ${{ env.GITHUB_WORKSPACE }}/${{ github.event.pull_request.head.repo.name }}
-          molecule test
+          echo "Github Workspace: ${github.workspace}"
+          echo "Github Event Pull Request Head Repo Name: ${github.event.pull_request.head.repo.name}"
+          for dir in $(find ${{ github.workspace }} -type d -name "${{ inputs.directory-path }}"); do
+            cd $dir && molecule test
+          done
         env:
           PY_COLORS: '1'
           ANSIBLE_FORCE_COLOR: '1'
+        working-directory: ${{ github.event.pull_request.head.repo.name }}
+        inputs:
+          directory-path:
+            description: 'Directory path to run Molecule tests'
+            required: true
