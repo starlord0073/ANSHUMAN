@@ -1,13 +1,20 @@
 name: Molecule Test
 
 on:
+  workflow_dispatch:
   pull_request:
+    branches:
+      - main
+  push:
     branches:
       - main
 
 jobs:
   molecule_test:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        platform: ['centos7', 'debian10']
     steps:
       - name: Checkout Code
         uses: actions/checkout@v2
@@ -20,13 +27,10 @@ jobs:
           sudo systemctl start docker
           ansible-galaxy collection install community.docker
           ansible-galaxy collection install ansible.posix
-      
-      - name: Run Molecule Tests
+      - name: molecule Test
         run: |
-          for dir in $(find . -type f -name molecule.yml -printf '%h\n' | sort -u); do
-            cd "${dir}" && molecule test
-          done
+          cd terraform-install
+          molecule test
         env:
           PY_COLORS: '1'
           ANSIBLE_FORCE_COLOR: '1'
-        if: github.event_name == 'pull_request'
