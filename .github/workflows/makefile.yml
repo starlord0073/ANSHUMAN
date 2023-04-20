@@ -1,23 +1,16 @@
 name: Molecule Test
 
 on:
-  workflow_dispatch:
   pull_request:
-    branches:
-      - main
-  push:
     branches:
       - main
 
 jobs:
   molecule_test:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        platform: ['centos7', 'debian10']
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v2
 
       - name: Install Dependencies
         run: |
@@ -27,18 +20,21 @@ jobs:
           sudo systemctl start docker
           ansible-galaxy collection install community.docker
           ansible-galaxy collection install ansible.posix
-      
-      - name: Run Molecule Test
-        if: github.event_name == 'pull_request'
+
+      - name: molecule Test
         run: |
-          echo "Github Workspace: ${github.workspace}"
-          echo "Github Event Pull Request Head Repo Name: ${github.event.pull_request.head.repo.name}"
-          cd ${{ github.workspace }}/${{ github.event.pull_request.head.repo.name }}
-          for dir in ${{ inputs.directory-path }}/* ; do
-            if [ -d "${dir}" ]; then
-              cd "${dir}" && molecule test
-            fi
-          done
+          # Get the name of the branch associated with the pull request
+          branch_name="${{ github.event.pull_request.head.ref }}"
+
+          # Clone the repository and search for the roles directory
+          git clone https://github.com/${{ github.repository }}.git
+          cd $(basename "${{ github.repository }}" .git)
+          role_dir="$(find . -type d -name roles)"
+
+          # Navigate to the role directory and run molecule test
+          cd "${role_dir}"
+          cd "${branch_name}"
+          molecule test
         env:
           PY_COLORS: '1'
           ANSIBLE_FORCE_COLOR: '1'
