@@ -5,13 +5,19 @@ on:
   pull_request:
     branches:
       - main
+  push:
+    branches:
+      - main
 
 jobs:
   molecule_test:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        platform: ['centos7', 'debian10']
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Install Dependencies
         run: |
@@ -22,12 +28,15 @@ jobs:
           ansible-galaxy collection install community.docker
           ansible-galaxy collection install ansible.posix
       
-      - name: Run Molecule Tests
+      - name: Run Molecule Test
+        if: github.event_name == 'pull_request'
         run: |
-          for dir in $(find . -type f -name molecule.yml -printf '%h\n' | sort -u); do
-            cd "${dir}" && molecule test
+          echo "Github Workspace: ${github.workspace}"
+          find "${{ github.workspace }}" -type d -name "meta" | while read dir; do
+            role_dir=$(dirname "$dir")
+            cd "$role_dir"
+            molecule test
           done
         env:
           PY_COLORS: '1'
           ANSIBLE_FORCE_COLOR: '1'
-        if: github.event_name == 'pull_request'
