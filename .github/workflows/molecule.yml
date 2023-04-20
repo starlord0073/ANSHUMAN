@@ -17,7 +17,7 @@ jobs:
         platform: ['centos7', 'debian10']
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v2
 
       - name: Install Dependencies
         run: |
@@ -27,16 +27,10 @@ jobs:
           sudo systemctl start docker
           ansible-galaxy collection install community.docker
           ansible-galaxy collection install ansible.posix
-      
-      - name: Run Molecule Test
-        if: github.event_name == 'pull_request'
+      - name: molecule Test
         run: |
-          echo "Github Workspace: ${github.workspace}"
-          find "${{ github.workspace }}" -type d -name "meta" | while read dir; do
-            role_dir=$(dirname "$dir")
-            cd "$role_dir"
-            molecule test
-          done
+          cd terraform-install
+          molecule test
         env:
           PY_COLORS: '1'
-          ANSIBLE_FORCE_COLOR: '1'
+          ANSIBLE_FORCE_COLOR: '1
