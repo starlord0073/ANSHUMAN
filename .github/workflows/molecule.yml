@@ -28,15 +28,10 @@ jobs:
           ansible-galaxy collection install community.docker
           ansible-galaxy collection install ansible.posix
 
-      - name: Run Molecule Test
-        if: github.event_name == 'pull_request'
+      - name: molecule Test
         run: |
-          cd ${{ github.workspace }}/${{ github.event.pull_request.head.repo.name }}
-          for dir in ${{ inputs.directory-path }}/* ; do
-            if [ -d "${dir}" ]; then
-              cd "${dir}" && molecule test
-            fi
-          done
+          cd ${{ env.GITHUB_WORKSPACE }}/${{ github.event.pull_request.head.repo.name }}
+          molecule test
         env:
           PY_COLORS: '1'
           ANSIBLE_FORCE_COLOR: '1'
