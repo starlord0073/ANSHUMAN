@@ -1,4 +1,4 @@
-name: Molecule Testtttttttttttttttt
+name: Molecule Test
 
 on:
   workflow_dispatch:
@@ -22,20 +22,10 @@ jobs:
           ansible-galaxy collection install community.docker
           ansible-galaxy collection install ansible.posix
       
-      - name: Get Repository Directories
-        id: repo-dirs
-        uses: gr2m/get-repository-directories@v1.x
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          top_level_only: false
-      
       - name: Run Molecule Tests
         run: |
-          for dir in ${{ steps.repo-dirs.outputs.relative_paths }}; do
-            if [ -d "${dir}/meta" ]; then
-              role_dir="$(dirname "${dir}")"
-              cd "${role_dir}" && molecule test
-            fi
+          for dir in $(find . -type f -name molecule.yml -printf '%h\n' | sort -u); do
+            cd "${dir}" && molecule test
           done
         env:
           PY_COLORS: '1'
